@@ -1,0 +1,18 @@
+<?php
+require_once __DIR__.'/includes/db.php';
+require_once __DIR__.'/includes/layout.php';
+$id=isset($_GET['id'])?positive_id($_GET['id']):null;
+if(isset($_GET['id']) && $id===null){flash('ID barang tidak valid.','error');go('barang.php');}
+$editing=$id!==null;
+$pdo=db();
+$units=$pdo->query('SELECT idsatuan,nama_satuan,status FROM satuan ORDER BY nama_satuan')->fetchAll();
+$data=['nama'=>'','jenis'=>'1','idsatuan'=>'','status'=>1,'harga'=>0];
+if($editing){$q=$pdo->prepare('SELECT idbarang,nama,jenis,idsatuan,status,harga FROM barang WHERE idbarang=:id');$q->execute(['id'=>$id]);$found=$q->fetch();if(!$found){flash('Barang tidak ditemukan.','error');go('barang.php');}$data=$found;}
+page_start($editing?'Edit Barang':'Tambah Barang','barang'); ?>
+<section class="page-heading"><div><span class="eyebrow">MASTER DATA / PRODUK</span><h1><?= $editing?'Edit Barang':'Tambah Barang Baru' ?></h1><p>Masukkan nama barang, satuan, harga, dan status katalog.</p></div><a href="barang.php" class="btn btn-light"><?= icon_svg('back',17) ?> Kembali</a></section>
+<div class="form-layout"><section class="card form-card"><div class="section-top"><div><h2>Informasi Produk</h2><p>Semua kolom berikut wajib diisi dengan benar.</p></div><span class="muted-tag"><?= $editing?'UPDATE':'CREATE' ?></span></div><form action="barang-save.php" method="post"><input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>"><input type="hidden" name="id" value="<?= $editing?(int)$id:'' ?>">
+<div class="form-group"><label for="nama">Nama Barang <span class="required">*</span></label><input id="nama" name="nama" maxlength="45" required value="<?= e($data['nama']) ?>" placeholder="Contoh: Beras Super 5 Kg"></div>
+<div class="form-row"><div class="form-group"><label for="jenis">Kode Jenis (CHAR 1) <span class="required">*</span></label><input id="jenis" name="jenis" maxlength="1" required value="<?= e($data['jenis']) ?>"><small>Gunakan kode sesuai database/dosen; arti kode belum didefinisikan ERD.</small></div><div class="form-group"><label for="idsatuan">Satuan <span class="required">*</span></label><select id="idsatuan" name="idsatuan" required><option value="">Pilih satuan</option><?php foreach($units as $u):?><option value="<?= (int)$u['idsatuan'] ?>" <?= (int)$data['idsatuan']===(int)$u['idsatuan']?'selected':'' ?>><?= e($u['nama_satuan']) ?><?= (int)$u['status']===0?' (nonaktif)':'' ?></option><?php endforeach;?></select></div></div>
+<div class="form-row"><div class="form-group"><label for="harga">Harga (Rp) <span class="required">*</span></label><input id="harga" name="harga" type="number" min="0" max="2147483647" required value="<?= (int)$data['harga'] ?>"></div><div class="form-group"><label for="status">Status Katalog <span class="required">*</span></label><select id="status" name="status"><option value="1" <?= (int)$data['status']===1?'selected':'' ?>>Aktif — tampil untuk pembeli</option><option value="0" <?= (int)$data['status']===0?'selected':'' ?>>Nonaktif — disembunyikan</option></select></div></div>
+<div class="form-actions"><a class="btn btn-light" href="barang.php">Batal</a><button type="submit" class="btn btn-primary"><?= icon_svg('check',17) ?> <?= $editing?'Simpan Perubahan':'Simpan Barang' ?></button></div></form></section><aside class="tip-panel"><div class="tip-icon">🛒</div><h3>Terhubung ke katalog</h3><p>Barang berstatus aktif akan otomatis muncul di dashboard pembeli dan daftar harga.</p><div class="tip-divider"></div><strong>Struktur database tetap</strong><span class="relation-chip">barang.idsatuan → satuan.idsatuan</span><p style="margin-top:16px">Tidak membuat tabel baru dan tidak memakai Query Builder.</p></aside></div>
+<?php page_end(); ?>

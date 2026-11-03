@@ -1,0 +1,16 @@
+<?php
+require_once __DIR__.'/includes/db.php';
+require_once __DIR__.'/includes/store_layout.php';
+$pdo=db();
+$summary=$pdo->query('SELECT COUNT(*) AS total, COUNT(DISTINCT idsatuan) AS satuan FROM barang WHERE status=1')->fetch();
+$items=$pdo->query('SELECT b.idbarang,b.nama,b.harga,s.nama_satuan FROM barang b INNER JOIN satuan s ON s.idsatuan=b.idsatuan WHERE b.status=1 ORDER BY b.idbarang ASC LIMIT 6')->fetchAll();
+store_start('Beranda Pembeli','home');
+?>
+<section class="store-hero"><div class="hero-text"><span class="hero-badge">✦ KEBUTUHAN HARIAN JADI PRAKTIS</span><h1>Sembako lengkap,<br><em>harga terlihat jelas.</em></h1><p>Intip pilihan kebutuhan pokok Toko Sembako Gen Z — dari beras, minyak goreng, sampai kopi dan susu. Harga diambil langsung dari database toko.</p><div class="hero-actions"><a class="store-btn store-primary" href="katalog.php">Lihat Daftar Harga <span>↗</span></a><a class="store-btn store-outline" href="#unggulan">Jelajahi Produk ↓</a></div><div class="hero-small-stats"><div><strong><?= (int)$summary['total'] ?>+</strong><span>Produk aktif</span></div><div><strong><?= (int)$summary['satuan'] ?></strong><span>Jenis satuan</span></div><div><strong>100%</strong><span>Data dari database</span></div></div></div><div class="hero-art" aria-hidden="true"><span class="hero-glow glow-one"></span><span class="hero-glow glow-two"></span><div class="sack">🌾</div><div class="hero-float fl-1">🛒</div><div class="hero-float fl-2">🥛</div><div class="hero-float fl-3">🍜</div><span class="hero-stamp">GEN Z<br><b>MARKET</b></span></div></section>
+<section class="buyer-benefits"><div><span>◎</span><p><b>Katalog jelas</b><small>Nama, harga, dan satuan</small></p></div><div><span>◷</span><p><b>Data terhubung</b><small>Langsung dari MySQL</small></p></div><div><span>✓</span><p><b>Praktis dicari</b><small>Daftar harga satu halaman</small></p></div></section>
+<section id="unggulan" class="buyer-section"><div class="buyer-section-title"><div><span class="eyebrow">KATALOG / PILIHAN TOKO</span><h2>Produk kebutuhan sehari-hari</h2><p>Daftar produk aktif yang tercatat di sistem.</p></div><a class="link-arrow" href="katalog.php">Semua Produk <span>→</span></a></div><div class="product-grid">
+<?php foreach($items as $row): ?><article class="product-card"><div class="product-visual"><span><?= product_emoji($row['nama']) ?></span><span class="card-tag">Tersedia di katalog</span></div><div class="product-copy"><small><?= e($row['nama_satuan']) ?></small><h3><?= e($row['nama']) ?></h3><div class="product-bottom"><strong><?= rupiah($row['harga']) ?></strong><span>/ <?= e($row['nama_satuan']) ?></span></div></div></article><?php endforeach; ?>
+<?php if(!$items):?><p class="empty">Belum ada produk aktif di katalog.</p><?php endif;?></div></section>
+<section class="buyer-callout"><span>✳</span><div><h3>Ingin lihat harga seluruh barang?</h3><p>Buka tabel katalog untuk melihat nama produk, satuan, kode barang, dan harga lengkap.</p></div><a class="store-btn store-primary" href="katalog.php">Buka Katalog →</a></section>
+<div class="store-disclaimer">ℹ Tahap UTS: ini adalah tampilan katalog pembeli, bukan sistem checkout online. Data stok dan pemesanan akan dikembangkan pada tahap UAS.</div>
+<?php store_end(); ?>
